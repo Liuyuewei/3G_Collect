@@ -1,0 +1,152 @@
+#ifndef DRV_AD568X_H__
+#define DRV_AD568X_H__
+#include <rtdevice.h>
+
+#define AD568X_SPI_DEVICE_NAME     "spi20"   	/* SPI 设备名称 */
+#define AD568X_SPI_BUS_NAME		   "spi2"		/* SPI 总线名称 */
+#define AD568X_DEVICE			   "AD568x"		/* AD568X设备名称 */
+
+#define VOL 0.2		//初始化电压值
+
+typedef struct spiDevice
+{
+    struct rt_device                Device;
+    struct rt_spi_device *          spiDevice;
+}AD568X_Device_t;
+
+//命令类型
+enum cmd
+{
+	Init = 1,
+	PowerMode,
+	Reset,
+	RefSsource,
+	SetVoltage,
+	ReadBack,
+};
+
+//typedef struct AD568xData
+//{
+//	unsigned char channel;
+//	unsigned char vRefMode;
+//	unsigned char resetOutput;
+//	unsigned char pwrMode;
+//	unsigned char writeCommand;
+//	unsigned char dacChannelAddr;
+//	unsigned short data;
+//	unsigned long registerValue;
+//	float outputVoltage;
+//	float vRef;
+//}AD568xData;
+
+typedef struct AD568xData
+{
+	float outputVoltage;
+	unsigned char channel;
+
+}AD568xData;
+typedef struct AD568xData *AD568xData_t;
+
+/* AD568x Versions */
+#define AD5684          1   // 12-bit DAC, no internal voltage reference.
+#define AD5686          2   // 16-bit DAC, no internal voltage reference.
+#define AD5684R         3   // 12-bit DAC, with internal voltage reference.
+#define AD5685R         4   // 14-bit DAC, with internal voltage reference.
+#define AD5686R         5   // 16-bit DAC, with internal voltage reference.
+
+
+/* SPI slave device ID */
+#define AD568X_SLAVE_ID        			1
+
+/* AD568X Input Register */
+#define AD568X_CMD(x)                  ((0x000F & (long)(x)) << 20)
+#define AD568X_ADDR(x)                 ((0x000F & (long)(x)) << 16)
+#define AD568X_DATA_BITS(x)            ((0xFFFF & (long)(x)) <<  0)
+
+/* AD568X_CMD(x) options */
+#define AD568X_CMD_NOP                 0 // No operation.
+#define AD568X_CMD_WR_INPUT_N          1 // Write to Input Register n.
+#define AD568X_CMD_UPDATE_DAC_N        2 // Update DAC Register n.
+#define AD568X_CMD_WR_UPDT_DAC_N       3 // Write to and update DAC Channel n.
+#define AD568X_CMD_POWERMODE           4 // Power down/power up DAC.
+#define AD568X_CMD_LDAC_MASK           5 // Hardware LDAC mask register.
+#define AD568X_CMD_SOFT_RESET          6 // Software reset(power-on reset).
+#define AD568X_CMD_INT_REF_SETUP       7 // Internal reference setup register.
+#define AD568X_CMD_SET_DCEN            8 // Set up DCEN register.
+#define AD568X_CMD_SET_READBACK        9 // Set up readback register.
+
+/* AD568X_ADDR(x) options */
+#define AD568X_ADDR_DAC_A          1  // DAC A
+#define AD568X_ADDR_DAC_B          2  // DAC B
+#define AD568X_ADDR_DAC_C          4  // DAC C
+#define AD568X_ADDR_DAC_D          8  // DAC D
+#define AD568X_ADDR_DAC_A_B        3  // DAC A and DAC B
+#define AD568X_ADDR_DAC_ALL        15 // All DACs
+
+/* Daisy-Chain Enable Register(DCEN) definition */
+#define AD568X_DCEN_DISABLE        0
+#define AD568X_DCEN_ENABLE         1
+
+/* Power Setup Register definition */
+#define AD568X_PWR_PDD(x)      (((x) & 0x3) << 6)
+#define AD568X_PWR_PDC(x)      (((x) & 0x3) << 4)
+#define AD568X_PWR_PDB(x)      (((x) & 0x3) << 2)
+#define AD568X_PWR_PDA(x)      (((x) & 0x3) << 0)
+
+/* AD568X_PWR_PDn(x) options(n = A, B, C, D) */
+#define AD568X_PD_NORMAL       0 // Normal operation
+#define AD568X_PD_1K           1 // 1 kOhm to GND
+#define AD568X_PD_100K         2 // 100 kOhm to GND
+#define AD568X_PD_3STATE       3 // Three-state
+
+/* LDAC Mask Register definition */
+#define AD568X_MSK_CH_A        1
+#define AD568X_MSK_CH_B        2
+#define AD568X_MSK_CH_C        4
+#define AD568X_MSK_CH_D        8
+
+/* Reference Setup Register definition */
+#define AD568X_INT_REF_ON      0
+#define AD568X_INT_REF_OFF     1
+
+/* Clear code options */
+#define AD568X_RST_ZERO_SCALE     0
+#define AD568X_RST_MIDSCALE       1
+
+/******************************************************************************/
+/************************ Functions Declarations ******************************/
+/******************************************************************************/
+
+/*! Initializes the device. */
+void AD568X_Init(struct rt_spi_device *device);
+
+/*! Resets the device(clears the outputs to either zero scale or midscale). */
+void AD568X_Reset(struct rt_spi_device *device,unsigned char resetOutput);
+
+/*! Puts the device in a specific power mode. */
+void AD568X_PowerMode(struct rt_spi_device *device,unsigned char channel, unsigned char pwrMode);
+
+/*! Select internal or external voltage reference. */
+void AD568X_InternalVoltageReference(struct rt_spi_device *device,unsigned char vRefMode);
+
+/*!  Writes a 24-bit data-word to the Input Register of the device. */
+void AD568X_SetInputRegister(struct rt_spi_device *device,unsigned long registerValue);
+
+/*! Write data to the Input Register or to DAC Register of a channel. */
+void AD568X_WriteFunction(struct rt_spi_device *device,
+						  unsigned char writeCommand, 
+                          unsigned char channel, 
+                          unsigned short data);
+
+/*! Reads back the binary value written to one of the channels. */
+unsigned short AD568X_ReadBack(struct rt_spi_device *device,unsigned char dacChannelAddr);
+
+/*! Selects the output voltage of the selected channel. */
+float AD568X_SetVoltage(struct rt_spi_device *device,unsigned char channel, 
+                        float outputVoltage, 
+                        float vRef);
+						
+int rt_hw_spi_dac_init(void);
+
+#endif
+
