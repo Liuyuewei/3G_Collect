@@ -6,6 +6,8 @@
 #include "board.h"
 //#include "drv_ad568x.h"
 #include "string.h" 
+#include "drv_dac_onchip.h"
+
 
 rt_device_t dac_device;
 /**********************ADC通道数**************************/
@@ -20,6 +22,14 @@ rt_device_t dac_device;
 #define ADC_DEV_CHA9	9
 #define ADC_DEV_CHA14	14
 #define ADC_DEV_CHA15	15
+
+
+//ADC采集
+#define ADC_COL_NUM		20
+#define ADC_LOSE_NUM	5
+
+//DAC初始电压值
+#define DAC_VOL			2.0
 
 rt_uint8_t chanel[CHANNEL_NUM]=
 {
@@ -36,19 +46,40 @@ rt_uint8_t chanel[CHANNEL_NUM]=
 #define CONVERT_BITS	(1<<12)	 	/* 转换位数为12位 */
 
 
+
 ALIGN(RT_ALIGN_SIZE)
 static char adc_stack[512];
 //线程控制块
 static struct rt_thread adc_thread;
 rt_adc_device_t adc_dev;			/* ADC 设备句柄 */  
 
+rt_device_t dac_dev;				/* DAC 设备句柄 */ 
+
+
+////dac设备初始化
+void dac_init(void)
+{
+	double vol = DAC_VOL;
+	dac_dev = rt_device_find(DAC_DEV_NAME);
+	if(dac_dev == RT_NULL)
+	{
+		rt_kprintf("can't find %s device!\n", DAC_DEV_NAME);
+	}
+	
+	rt_device_open(dac_dev,RT_DEVICE_FLAG_RDWR);
+	
+	rt_device_write(dac_dev,0,&vol,sizeof(double));
+
+}
+
+//adc设备初始化
 void adc_init(void)
 {
 	//查找ADC设备
 	adc_dev = (rt_adc_device_t)rt_device_find(ADC_DEV_NAME);
 	if(adc_dev == RT_NULL)
 	{
-		rt_kprintf("adc run failed! can't find %s device!\n", ADC_DEV_NAME);
+		rt_kprintf("can't find %s device!\n", ADC_DEV_NAME);
 	}
 	
 	
@@ -80,24 +111,37 @@ void adc_collect(void)
 
 static void adc_thread_entry(void *parameter)
 {
-	rt_uint32_t value;					/* ADC值 */
-	rt_uint32_t vol;					/* ADC采集电压值 */
-	//初始化硬件接口
-//	rt_hw_gpio_init();
+	rt_uint32_t value = 0;					/* ADC值 */
+	rt_uint32_t vol = 0;					/* ADC采集电压值 */
+	
+	//DAC初始化
+	dac_init();
 	//ADC初始化
 	adc_init();
 	
 
 	while(1)
 	{
-		value = rt_adc_read(adc_dev, ADC_DEV_CHA0);
+		value = 0;
+		for(rt_uint8_t i = 0;i<ADC_COL_NUM;i++)
+		{
+			if(i>=ADC_LOSE_NUM)
+			value += rt_adc_read(adc_dev, ADC_DEV_CHA0);	
+		}
+		value /= ADC_COL_NUM - ADC_LOSE_NUM;
 		/* 转换为对应电压值 */
 		vol = value * REFER_VOLTAGE / CONVERT_BITS;
 		rt_kprintf("VOL%02d:  %d.%02dV \r\n",ADC_DEV_CHA0, vol / 100, vol % 100);
 		
-		rt_thread_mdelay(500);
+		rt_thread_mdelay(10);
 		
-		value = rt_adc_read(adc_dev, ADC_DEV_CHA5);
+		value = 0;
+		for(rt_uint8_t j = 0;j<ADC_COL_NUM;j++)
+		{
+			if(j>=ADC_LOSE_NUM)
+			value += rt_adc_read(adc_dev, ADC_DEV_CHA5);	
+		}
+		value /= ADC_COL_NUM - ADC_LOSE_NUM;
 		/* 转换为对应电压值 */
 		vol = value * REFER_VOLTAGE / CONVERT_BITS;
 		rt_kprintf("VOL%02d:  %d.%02dV \r\n",ADC_DEV_CHA5, vol / 100, vol % 100);

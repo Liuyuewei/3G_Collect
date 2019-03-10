@@ -168,6 +168,7 @@
 #define BSP_USING_UART2
 #define BSP_USING_ADC
 #define BSP_USING_ADC1
+#define BSP_USING_DAC
 
 /* Board extended module Drivers */
 

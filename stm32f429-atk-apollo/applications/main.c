@@ -13,9 +13,12 @@
 
 #include "led_run.h"
 #include "adc_collect.h"
+#include "drv_dac_onchip.h"
 
 int main(void)
 {
+//	rt_hw_dac_init();
+	
 	thread_init_led();
 	thread_init_adc();
     return RT_EOK;

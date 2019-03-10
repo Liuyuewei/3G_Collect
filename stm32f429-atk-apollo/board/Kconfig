@@ -218,6 +218,11 @@ menu "On-chip Peripheral Drivers"
                 bool "Enable ADC1"
                 default n
         endif
+		
+	config BSP_USING_DAC
+        bool "Enable DAC"
+        select RT_USING_DAC
+        default n
 
     config BSP_USING_ONCHIP_RTC
         bool "Enable RTC"
