@@ -11,7 +11,7 @@
 
 
 ALIGN(RT_ALIGN_SIZE)
-static char led_stack[512];
+static char led_stack[256];
 
 //Ïß³Ì¿ØÖÆ¿é
 static struct rt_thread led_thread;
