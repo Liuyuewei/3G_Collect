@@ -29,7 +29,7 @@ rt_device_t dac_device;
 #define ADC_LOSE_NUM	5
 
 //DAC初始电压值
-#define DAC_VOL			2.0
+#define DAC_VOL			0.0
 
 rt_uint8_t chanel[CHANNEL_NUM]=
 {
@@ -54,6 +54,11 @@ static struct rt_thread adc_thread;
 rt_adc_device_t adc_dev;			/* ADC 设备句柄 */  
 
 rt_device_t dac_dev;				/* DAC 设备句柄 */ 
+
+//连续采集控制标志
+#define START_COL	1
+#define STOP_COL	0
+rt_uint8_t start_flag = 0;			//1：启动	0：停止
 
 
 ////dac设备初始化
@@ -109,6 +114,7 @@ void adc_collect(void)
 	rt_kprintf("*****************************\r\n");
 }
 
+#define SIGNAL_CHANNEL	0
 static void adc_thread_entry(void *parameter)
 {
 	rt_uint32_t value = 0;					/* ADC值 */
@@ -122,35 +128,43 @@ static void adc_thread_entry(void *parameter)
 
 	while(1)
 	{
-		value = 0;
-		for(rt_uint8_t i = 0;i<ADC_COL_NUM;i++)
+		if(start_flag == START_COL)
 		{
-			if(i>=ADC_LOSE_NUM)
-			value += rt_adc_read(adc_dev, ADC_DEV_CHA0);	
-		}
-		value /= ADC_COL_NUM - ADC_LOSE_NUM;
-		/* 转换为对应电压值 */
-		vol = value * REFER_VOLTAGE / CONVERT_BITS;
-		rt_kprintf("VOL%02d:  %d.%02dV \r\n",ADC_DEV_CHA0, vol / 100, vol % 100);
-		
-		rt_thread_mdelay(10);
-		
-		value = 0;
-		for(rt_uint8_t j = 0;j<ADC_COL_NUM;j++)
-		{
-			if(j>=ADC_LOSE_NUM)
-			value += rt_adc_read(adc_dev, ADC_DEV_CHA5);	
-		}
-		value /= ADC_COL_NUM - ADC_LOSE_NUM;
-		/* 转换为对应电压值 */
-		vol = value * REFER_VOLTAGE / CONVERT_BITS;
-		rt_kprintf("VOL%02d:  %d.%02dV \r\n",ADC_DEV_CHA5, vol / 100, vol % 100);
-		rt_kprintf("*****************************\r\n");
-		rt_thread_delay(500);
+#if	SIGNAL_CHANNEL
+			value = 0;
+			for(rt_uint8_t i = 0;i<ADC_COL_NUM;i++)
+			{
+				if(i>=ADC_LOSE_NUM)
+				value += rt_adc_read(adc_dev, ADC_DEV_CHA0);	
+			}
+			value /= ADC_COL_NUM - ADC_LOSE_NUM;
+			/* 转换为对应电压值 */
+			vol = value * REFER_VOLTAGE / CONVERT_BITS;
+			rt_kprintf("VOL%02d:  %d.%02dV \r\n",ADC_DEV_CHA0, vol / 100, vol % 100);
+			
+			rt_thread_mdelay(10);
+#endif
+			value = 0;
+			for(rt_uint8_t j = 0;j<ADC_COL_NUM;j++)
+			{
+				if(j>=ADC_LOSE_NUM)
+				value += rt_adc_read(adc_dev, ADC_DEV_CHA5);	
+			}
+			value /= ADC_COL_NUM - ADC_LOSE_NUM;
+			/* 转换为对应电压值 */
+			vol = value * REFER_VOLTAGE / CONVERT_BITS;
+#if SIGNAL_CHANNEL
+			rt_kprintf("VOL%02d:  %d.%02dV \r\n",ADC_DEV_CHA5, vol / 100, vol % 100);
+			rt_kprintf("*****************************\r\n");
+#else
+			rt_kprintf("VOL:  %d.%02dV \r\n", vol / 100, vol % 100);
+#endif
+		}		
+		rt_thread_delay(1000);
 	}
 }
 
-
+//初始化线程
 int thread_init_adc(void)
 {
 	rt_err_t result;
@@ -171,8 +185,55 @@ int thread_init_adc(void)
     return 0;
 }
 
+//通过命令设置DAC输出电压及读取ADC 5通道采集到的电压值
+#include "string.h"
+void vol(int argc,char ** argv)
+{
+	double vol_set = 0;
+	rt_uint8_t channel = 0;
+	rt_uint32_t value = 0;					/* ADC值 */
+	rt_uint32_t vol_read = 0;
+	
+	if(argc < 2)
+	{
+		rt_kprintf("vol set 1.5 or vol read !\n\r");
+		return ;
+	}
+	if(!rt_strcmp(argv[1],"set"))
+	{
+		
+		vol_set = atof(argv[2]);
+		rt_device_write(dac_dev,0,&vol_set,sizeof(double));		
+	}
+	
+	else if(!rt_strcmp(argv[1],"read"))
+	{			
+		for(rt_uint8_t j = 0;j<ADC_COL_NUM;j++)
+		{
+			if(j>=ADC_LOSE_NUM)
+			value += rt_adc_read(adc_dev, ADC_DEV_CHA5);	
+		} 
+		value /= ADC_COL_NUM - ADC_LOSE_NUM;
+		/* 转换为对应电压值 */
+		vol_read = value * REFER_VOLTAGE / CONVERT_BITS;
+		rt_kprintf("VOL: %d.%02dV \r\n", vol_read / 100, vol_read % 100);		
+	}
+	else if(!rt_strcmp(argv[1],"start"))
+	{			
+		start_flag = START_COL;
+	}
+	else if(!rt_strcmp(argv[1],"stop"))
+	{			
+		start_flag = STOP_COL;	
+	}
+	else
+	{
+		rt_kprintf("please input right parameter !\n\r");
+	}
+}
+
 /* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(thread_init_adc, adc collect);
-
+MSH_CMD_EXPORT(vol, vol set or read!);
 
 

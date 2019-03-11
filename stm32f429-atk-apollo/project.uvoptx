@@ -133,7 +133,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGUARM</Key>
-          <Name>p?</Name>
+          <Name>H?</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -150,9 +150,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>117</LineNumber>
+          <LineNumber>187</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134235994</Address>
+          <Address>134280124</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -161,14 +161,19 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>applications\adc_collect.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\rt_thread\applications/adc_collect.c\117</Expression>
+          <Expression>\\rt_thread\applications/adc_collect.c\187</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>value</ItemText>
+          <ItemText>argv[1]</ItemText>
+        </Ww>
+        <Ww>
+          <count>1</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>argv[2]</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
