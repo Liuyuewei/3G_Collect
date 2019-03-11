@@ -21,5 +21,5 @@ int main(void)
 	
 	thread_init_led();
 	thread_init_adc();
-    return RT_EOK;
+	return RT_EOK;
 }
