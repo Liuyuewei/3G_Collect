@@ -73,6 +73,12 @@ if GetDepend(['BSP_USING_SDIO']):
 	
 if GetDepend(['BSP_USING_AD568X']):
     src += ['drv_ad568x.c']
+	
+if GetDepend(['BSP_USING_TMC5130']):
+	src +=['tmc/ic/TMC5130/TMC5130.c','tmc/helpers/CRC.c','tmc/helpers/Functions.c','tmc/helpers/LinearRamp.c']
+	
+if GetDepend(['BSP_USING_TMC5160']):
+	src +=['tmc/ic/TMC5160/TMC5160.c','tmc/helpers/CRC.c','tmc/helpers/Functions.c','tmc/helpers/LinearRamp.c']
 
 src += ['drv_common.c']
 

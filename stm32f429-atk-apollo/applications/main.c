@@ -14,10 +14,12 @@
 #include "led_run.h"
 #include "adc_collect.h"
 #include "drv_dac_onchip.h"
+#include "motor.h"
 
 int main(void)
 {
 	thread_init_led();
-	thread_init_adc();
+//	thread_init_adc();
+	thread_init_motor();
 	return RT_EOK;
 }

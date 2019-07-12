@@ -7,6 +7,9 @@ src     = Split("""
 led_run.c
 adc_collect.c
 main.c
+motor.c
+timer3.c
+common.c
 """)
 
 group = DefineGroup('Applications', src, depend = [''], CPPPATH = CPPPATH)

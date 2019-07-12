@@ -7,7 +7,7 @@
 
 /* defined the LED0 pin: PB1 */
 #define LED1_PIN    GET_PIN(B, 0)
-#define LED0_PIN    GET_PIN(B, 1)
+#define LED0_PIN    GET_PIN(A, 1)
 
 
 ALIGN(RT_ALIGN_SIZE)

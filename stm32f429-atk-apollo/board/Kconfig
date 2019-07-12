@@ -60,6 +60,19 @@ menu "Onboard Peripheral Drivers"
         select RT_USING_DFS
         select RT_USING_DFS_ELMFAT
         default n
+		
+	menuconfig BSP_USING_TMC
+		bool "Enable TMC drive"
+		default n
+		if BSP_USING_TMC
+			config BSP_USING_TMC5130
+				bool "Enable TMC5130"
+				default n 
+				
+			config BSP_USING_TMC5160
+				bool "Enable TMC5160"
+				default n 
+		endif
 
 endmenu
 

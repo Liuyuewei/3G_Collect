@@ -78,6 +78,7 @@
 #define RT_PIPE_BUFSZ 512
 #define RT_USING_SERIAL
 #define RT_SERIAL_USING_DMA
+#define RT_USING_HWTIMER
 #define RT_USING_PIN
 #define RT_USING_ADC
 
@@ -159,6 +160,8 @@
 
 #define BSP_USING_USB_TO_USART
 #define BSP_USING_COM2
+#define BSP_USING_TMC
+#define BSP_USING_TMC5130
 
 /* On-chip Peripheral Drivers */
 
